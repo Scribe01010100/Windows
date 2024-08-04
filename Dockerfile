@@ -1,14 +1,18 @@
-# Windows Server base image use kar rahe hain
-FROM mcr.microsoft.com/windows/servercore:ltsc2019
+# Use the latest Ubuntu image
+FROM ubuntu:latest
 
-# RDP ko enable karne ke liye PowerShell command use kar rahe hain
-RUN powershell -Command "Set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name 'fDenyTSConnections' -value 0"
+# Update package lists and install necessary packages
+RUN apt-get update && apt-get install -y openssh-server sudo
 
-# RDP port expose karna
-EXPOSE 3389
+# Create a user with sudo privileges and set a password
+RUN useradd -m -s /bin/bash user && echo "user:admin" | chpasswd && adduser user sudo
 
-# Windows user create karna
-RUN net user user admin /add && net localgroup administrators user /add
+# Configure SSH to allow password authentication and permit root login
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
-# RDP connection ke liye command
-CMD ["cmd.exe", "/k", "echo RDP connection string: %RDP_URL% && echo RDP username: user && echo RDP password: admin"]
+# Expose the SSH port
+EXPOSE 22
+
+# Start the SSH service
+CMD ["/usr/sbin/sshd", "-D"]
