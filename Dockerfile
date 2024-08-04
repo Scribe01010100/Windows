@@ -1,18 +1,16 @@
-# Use the latest Ubuntu image
-FROM ubuntu:latest
+# Windows 7 ke liye base image
+FROM microsoft/windows:7
 
-# Update package lists and install necessary packages
-RUN apt-get update && apt-get install -y openssh-server sudo
+# RDP service start karna
+RUN net start rdp
 
-# Create a user with sudo privileges and set a password
-RUN useradd -m -s /bin/bash user && echo "user:admin" | chpasswd && adduser user sudo
+# RDP port expose karna
+EXPOSE 3389
 
-# Configure SSH to allow password authentication and permit root login
-RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+# RDP username, password, aur URL set karna
+ENV RDP_USERNAME user
+ENV RDP_PASSWORD 123456
+ENV RDP_URL rdp://${RENDER_EXTERNAL_IP}:3389
 
-# Expose the SSH port
-EXPOSE 22
-
-# Start the SSH service
-CMD ["/usr/sbin/sshd", "-D"]
+# RDP connection ke liye command
+CMD ["cmd.exe", "/k", "echo RDP connection string: %RDP_URL% && echo RDP username: %RDP_USERNAME% && echo RDP password: %RDP_PASSWORD%"]
