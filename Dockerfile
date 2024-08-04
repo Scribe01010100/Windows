@@ -1,16 +1,14 @@
-# Windows 7 ke liye base image
-FROM microsoft/windows:7
+# Windows Server base image use kar rahe hain
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
 
-# RDP service start karna
-RUN net start rdp
+# RDP ko enable karne ke liye PowerShell command use kar rahe hain
+RUN powershell -Command "Set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name 'fDenyTSConnections' -value 0"
 
 # RDP port expose karna
 EXPOSE 3389
 
-# RDP username, password, aur URL set karna
-ENV RDP_USERNAME user
-ENV RDP_PASSWORD 123456
-ENV RDP_URL rdp://${RENDER_EXTERNAL_IP}:3389
+# Windows user create karna
+RUN net user user admin /add && net localgroup administrators user /add
 
 # RDP connection ke liye command
-CMD ["cmd.exe", "/k", "echo RDP connection string: %RDP_URL% && echo RDP username: %RDP_USERNAME% && echo RDP password: %RDP_PASSWORD%"]
+CMD ["cmd.exe", "/k", "echo RDP connection string: %RDP_URL% && echo RDP username: user && echo RDP password: admin"]
